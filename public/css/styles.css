@@ -172,6 +172,97 @@ body {
     color: #7f8c8d;
 }
 
+/* Charts Section */
+.charts-section {
+    margin-bottom: 3rem;
+}
+
+.charts-section h2 {
+    font-size: 2rem;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+}
+
+.chart-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.chart-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+.chart-header h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.chart-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.time-btn {
+    background: transparent;
+    border: 2px solid #e0e6ed;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #7f8c8d;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.time-btn:hover {
+    border-color: #3498db;
+    color: #3498db;
+}
+
+.time-btn.active {
+    background: #3498db;
+    border-color: #3498db;
+    color: white;
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+.chart-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
 /* Filters */
 .filters {
     background: rgba(255, 255, 255, 0.95);
@@ -546,6 +637,21 @@ body {
 
     .grid-container {
         grid-template-columns: 1fr;
+    }
+
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .chart-controls {
+        width: 100%;
+        justify-content: center;
     }
 
     .price-row {

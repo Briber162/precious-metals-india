@@ -8,12 +8,33 @@ class PreciousMetalsApp {
         this.retryCount = 0;
         this.maxRetries = 5;
         
+        // Chart data storage
+        this.chartData = {
+            gold: {
+                timestamps: [],
+                prices: [],
+                maxPoints: 60 // Store last 60 data points
+            },
+            silver: {
+                timestamps: [],
+                prices: [],
+                maxPoints: 60
+            }
+        };
+        
+        // Chart instances
+        this.charts = {
+            gold: null,
+            silver: null
+        };
+        
         this.init();
     }
 
     init() {
         this.initializeSocket();
         this.setupEventListeners();
+        this.initializeCharts();
         this.showLoading();
     }
 
@@ -79,6 +100,9 @@ class PreciousMetalsApp {
         // Store previous prices for comparison
         this.previousPrices = JSON.parse(JSON.stringify(this.allPrices));
         this.allPrices = newPrices;
+        
+        // Update charts with new data
+        this.updateChartData();
         
         // Update UI
         this.renderPriceGrid();
@@ -482,6 +506,271 @@ class PreciousMetalsApp {
         
         URL.revokeObjectURL(url);
         this.showToast('Data exported successfully', 'success');
+    }
+
+    // Chart Methods
+    initializeCharts() {
+        this.initializeGoldChart();
+        this.initializeSilverChart();
+        this.setupChartEventListeners();
+    }
+
+    initializeGoldChart() {
+        const ctx = document.getElementById('goldChart');
+        if (!ctx) return;
+
+        this.charts.gold = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Gold Price (₹/10g)',
+                    data: [],
+                    borderColor: '#FFD700',
+                    backgroundColor: 'rgba(255, 215, 0, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#FFD700',
+                    pointBorderColor: '#FFA500',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#FFD700',
+                        bodyColor: '#fff',
+                        borderColor: '#FFD700',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                return `₹${context.parsed.y.toLocaleString('en-IN')}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#666',
+                            maxTicksLimit: 8
+                        }
+                    },
+                    y: {
+                        display: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#666',
+                            callback: function(value) {
+                                return '₹' + value.toLocaleString('en-IN');
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                }
+            }
+        });
+    }
+
+    initializeSilverChart() {
+        const ctx = document.getElementById('silverChart');
+        if (!ctx) return;
+
+        this.charts.silver = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Silver Price (₹/kg)',
+                    data: [],
+                    borderColor: '#C0C0C0',
+                    backgroundColor: 'rgba(192, 192, 192, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#C0C0C0',
+                    pointBorderColor: '#A9A9A9',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#C0C0C0',
+                        bodyColor: '#fff',
+                        borderColor: '#C0C0C0',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                return `₹${context.parsed.y.toLocaleString('en-IN')}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#666',
+                            maxTicksLimit: 8
+                        }
+                    },
+                    y: {
+                        display: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#666',
+                            callback: function(value) {
+                                return '₹' + value.toLocaleString('en-IN');
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                }
+            }
+        });
+    }
+
+    updateChartData() {
+        if (!this.allPrices || Object.keys(this.allPrices).length === 0) return;
+
+        const now = new Date();
+        const timeLabel = now.toLocaleTimeString('en-IN', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            second: '2-digit'
+        });
+
+        // Calculate average prices
+        const allCityData = Object.values(this.allPrices);
+        const avgGoldPrice = Math.round(
+            allCityData.reduce((sum, city) => sum + city.gold['24k'], 0) / allCityData.length
+        );
+        const avgSilverPrice = Math.round(
+            allCityData.reduce((sum, city) => sum + city.silver['999'], 0) / allCityData.length
+        );
+
+        // Update gold chart data
+        this.chartData.gold.timestamps.push(timeLabel);
+        this.chartData.gold.prices.push(avgGoldPrice);
+
+        // Update silver chart data
+        this.chartData.silver.timestamps.push(timeLabel);
+        this.chartData.silver.prices.push(avgSilverPrice);
+
+        // Limit data points to prevent memory issues
+        if (this.chartData.gold.timestamps.length > this.chartData.gold.maxPoints) {
+            this.chartData.gold.timestamps.shift();
+            this.chartData.gold.prices.shift();
+        }
+        if (this.chartData.silver.timestamps.length > this.chartData.silver.maxPoints) {
+            this.chartData.silver.timestamps.shift();
+            this.chartData.silver.prices.shift();
+        }
+
+        // Update charts
+        this.updateChart('gold');
+        this.updateChart('silver');
+    }
+
+    updateChart(metalType) {
+        const chart = this.charts[metalType];
+        const data = this.chartData[metalType];
+        
+        if (!chart || !data) return;
+
+        chart.data.labels = [...data.timestamps];
+        chart.data.datasets[0].data = [...data.prices];
+        chart.update('none'); // Use 'none' animation for real-time updates
+    }
+
+    setupChartEventListeners() {
+        // Time frame button event listeners
+        document.querySelectorAll('.time-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const timeframe = e.target.dataset.timeframe;
+                const chartCard = e.target.closest('.chart-card');
+                
+                // Update active button
+                chartCard.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                
+                // Update chart based on timeframe
+                this.updateChartTimeframe(chartCard, timeframe);
+            });
+        });
+    }
+
+    updateChartTimeframe(chartCard, timeframe) {
+        const chartCanvas = chartCard.querySelector('canvas');
+        const metalType = chartCanvas.id.includes('gold') ? 'gold' : 'silver';
+        const chart = this.charts[metalType];
+        
+        if (!chart) return;
+
+        // Calculate how many data points to show based on timeframe
+        let maxPoints;
+        switch (timeframe) {
+            case '1h':
+                maxPoints = 60; // 1 hour of 1-minute intervals
+                break;
+            case '6h':
+                maxPoints = 36; // 6 hours of 10-minute intervals
+                break;
+            case '24h':
+                maxPoints = 24; // 24 hours of 1-hour intervals
+                break;
+            default:
+                maxPoints = 60;
+        }
+
+        // Update chart data based on timeframe
+        const data = this.chartData[metalType];
+        const startIndex = Math.max(0, data.timestamps.length - maxPoints);
+        
+        chart.data.labels = data.timestamps.slice(startIndex);
+        chart.data.datasets[0].data = data.prices.slice(startIndex);
+        chart.update();
     }
 }
 
