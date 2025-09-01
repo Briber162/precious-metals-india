@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Precious Metals India - Real-time Gold & Silver Prices</title>
+    <meta name="description" content="Real-time gold and silver prices across all major Indian metro cities. Track precious metals rates with live updates.">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏆</text></svg>">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Socket.IO Client -->
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-coins"></i>
+                    <h1>Precious Metals India</h1>
+                </div>
+                <div class="header-info">
+                    <div class="live-indicator">
+                        <span class="status-dot"></span>
+                        <span>Live Updates</span>
+                    </div>
+                    <div class="last-update">
+                        Last updated: <span id="lastUpdate">--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Market Overview -->
+            <section class="market-overview">
+                <h2>Market Overview</h2>
+                <div class="overview-grid">
+                    <div class="overview-card gold-card">
+                        <div class="card-header">
+                            <i class="fas fa-circle" style="color: #FFD700;"></i>
+                            <h3>Gold (24K)</h3>
+                        </div>
+                        <div class="price-display">
+                            <span class="price" id="avgGoldPrice">₹--</span>
+                            <span class="unit">per 10g</span>
+                        </div>
+                        <div class="trend" id="goldTrend">
+                            <i class="fas fa-minus"></i>
+                            <span>--</span>
+                        </div>
+                    </div>
+                    
+                    <div class="overview-card silver-card">
+                        <div class="card-header">
+                            <i class="fas fa-circle" style="color: #C0C0C0;"></i>
+                            <h3>Silver (999)</h3>
+                        </div>
+                        <div class="price-display">
+                            <span class="price" id="avgSilverPrice">₹--</span>
+                            <span class="unit">per kg</span>
+                        </div>
+                        <div class="trend" id="silverTrend">
+                            <i class="fas fa-minus"></i>
+                            <span>--</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Filters -->
+            <section class="filters">
+                <div class="filter-group">
+                    <label for="cityFilter">Filter by City:</label>
+                    <select id="cityFilter">
+                        <option value="">All Cities</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="metalFilter">Filter by Metal:</label>
+                    <select id="metalFilter">
+                        <option value="">All Metals</option>
+                        <option value="gold">Gold</option>
+                        <option value="silver">Silver</option>
+                    </select>
+                </div>
+
+                <div class="search-group">
+                    <input type="text" id="searchInput" placeholder="Search cities...">
+                    <i class="fas fa-search"></i>
+                </div>
+            </section>
+
+            <!-- Price Grid -->
+            <section class="price-grid">
+                <h2>City-wise Prices</h2>
+                <div class="grid-container" id="priceGrid">
+                    <!-- Price cards will be dynamically inserted here -->
+                </div>
+            </section>
+
+            <!-- Loading Indicator -->
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Loading precious metals data...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>About</h4>
+                    <p>Real-time precious metals prices for Indian metro cities. Data updates every 10 seconds.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Disclaimer</h4>
+                    <p>Prices are for reference only. Please verify with local dealers before making transactions.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Connect</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Precious Metals India. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- JavaScript -->
+    <script src="js/app.js"></script>
+</body>
+</html> 
