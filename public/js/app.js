@@ -65,6 +65,14 @@ class PreciousMetalsApp {
                 this.renderPriceGrid();
                 this.updateMarketOverview();
                 this.hideLoading();
+                
+                // Initialize charts after data is loaded
+                setTimeout(() => {
+                    if (!this.charts.gold || !this.charts.silver) {
+                        console.log('Retrying chart initialization...');
+                        this.initializeCharts();
+                    }
+                }, 2000);
             });
 
             this.socket.on('priceUpdate', (prices) => {
@@ -510,6 +518,14 @@ class PreciousMetalsApp {
 
     // Chart Methods
     initializeCharts() {
+        // Wait for Chart.js to be available
+        if (typeof Chart === 'undefined') {
+            console.log('Chart.js not loaded yet, retrying...');
+            setTimeout(() => this.initializeCharts(), 1000);
+            return;
+        }
+        
+        console.log('Initializing charts...');
         this.initializeGoldChart();
         this.initializeSilverChart();
         this.setupChartEventListeners();
@@ -517,7 +533,12 @@ class PreciousMetalsApp {
 
     initializeGoldChart() {
         const ctx = document.getElementById('goldChart');
-        if (!ctx) return;
+        if (!ctx) {
+            console.log('Gold chart canvas not found');
+            return;
+        }
+        
+        console.log('Creating gold chart...');
 
         this.charts.gold = new Chart(ctx, {
             type: 'line',
@@ -595,7 +616,12 @@ class PreciousMetalsApp {
 
     initializeSilverChart() {
         const ctx = document.getElementById('silverChart');
-        if (!ctx) return;
+        if (!ctx) {
+            console.log('Silver chart canvas not found');
+            return;
+        }
+        
+        console.log('Creating silver chart...');
 
         this.charts.silver = new Chart(ctx, {
             type: 'line',
