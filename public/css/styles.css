@@ -85,6 +85,12 @@ body {
     color: #7f8c8d;
 }
 
+.data-source {
+    font-size: 0.8rem;
+    color: #27ae60;
+    font-weight: 500;
+}
+
 /* Main Content */
 .main {
     padding: 2rem 0;

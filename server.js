@@ -7,6 +7,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const cron = require('node-cron');
 const path = require('path');
+const MCXApi = require('./mcx-api');
 
 const app = express();
 const server = http.createServer(app);
@@ -67,6 +68,10 @@ const BASE_PRICES = {
 // Store current prices for all cities
 let currentPrices = {};
 
+// Initialize MCX API
+const mcxApi = new MCXApi();
+let useMCXData = true; // Toggle between MCX and simulated data
+
 // Initialize prices for all cities
 function initializePrices() {
   METRO_CITIES.forEach(city => {
@@ -118,8 +123,60 @@ function getRandomTrend() {
   return trends[Math.floor(Math.random() * trends.length)];
 }
 
-// Update prices with realistic fluctuations
-function updatePrices() {
+// Update prices using MCX data or simulation
+async function updatePrices() {
+  try {
+    if (useMCXData) {
+      await updatePricesFromMCX();
+    } else {
+      updatePricesSimulated();
+    }
+  } catch (error) {
+    console.error('Error updating prices:', error);
+    // Fallback to simulated data
+    updatePricesSimulated();
+  }
+}
+
+// Update prices from MCX API
+async function updatePricesFromMCX() {
+  try {
+    console.log('Fetching MCX data...');
+    const mcxData = await mcxApi.fetchLiveData();
+    
+    if (mcxData && (mcxData.gold || mcxData.silver)) {
+      console.log('MCX Data received:', {
+        gold: mcxData.gold?.ltp,
+        silver: mcxData.silver?.ltp
+      });
+      
+      // Convert MCX data to city prices
+      currentPrices = mcxApi.convertToLocationPrices(mcxData, METRO_CITIES);
+      
+      // Broadcast updates to all connected clients
+      io.emit('priceUpdate', currentPrices);
+      console.log('✅ MCX prices updated successfully');
+      
+    } else {
+      throw new Error('No valid MCX data received');
+    }
+    
+  } catch (error) {
+    console.error('MCX API Error:', error.message);
+    console.log('🔄 Falling back to simulated data...');
+    useMCXData = false; // Temporarily disable MCX
+    updatePricesSimulated();
+    
+    // Re-enable MCX after 5 minutes
+    setTimeout(() => {
+      useMCXData = true;
+      console.log('🔄 Re-enabling MCX data...');
+    }, 5 * 60 * 1000);
+  }
+}
+
+// Update prices with realistic fluctuations (fallback)
+function updatePricesSimulated() {
   METRO_CITIES.forEach(city => {
     const cityPrices = currentPrices[city.id];
     
@@ -150,7 +207,27 @@ function updatePrices() {
 }
 
 // Initialize prices on server start
-initializePrices();
+async function initializeApp() {
+  try {
+    console.log('🔄 Initializing with MCX data...');
+    const mcxData = await mcxApi.fetchLiveData();
+    
+    if (mcxData && (mcxData.gold || mcxData.silver)) {
+      currentPrices = mcxApi.convertToLocationPrices(mcxData, METRO_CITIES);
+      console.log('✅ Initialized with MCX data');
+      console.log('📊 Gold LTP:', mcxData.gold?.ltp, '| Silver LTP:', mcxData.silver?.ltp);
+    } else {
+      throw new Error('No MCX data available');
+    }
+  } catch (error) {
+    console.log('⚠️ MCX initialization failed:', error.message);
+    console.log('🔄 Falling back to simulated data...');
+    useMCXData = false;
+    initializePrices();
+  }
+}
+
+initializeApp();
 
 // Routes
 app.get('/', (req, res) => {
@@ -171,6 +248,32 @@ app.get('/api/prices/:cityId', (req, res) => {
     res.json(currentPrices[cityId]);
   } else {
     res.status(404).json({ error: 'City not found' });
+  }
+});
+
+app.get('/api/status', (req, res) => {
+  res.json({
+    dataSource: useMCXData ? 'MCX (Multi Commodity Exchange)' : 'Simulated Data',
+    mcxEnabled: useMCXData,
+    lastUpdate: new Date().toISOString(),
+    citiesCount: METRO_CITIES.length,
+    apiStatus: 'operational'
+  });
+});
+
+app.get('/api/mcx-raw', async (req, res) => {
+  try {
+    const mcxData = await mcxApi.fetchLiveData();
+    res.json({
+      source: 'MCX India',
+      timestamp: new Date().toISOString(),
+      data: mcxData
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Failed to fetch MCX data',
+      message: error.message
+    });
   }
 });
 
